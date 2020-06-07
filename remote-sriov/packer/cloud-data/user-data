@@ -1,0 +1,12 @@
+#cloud-config
+ssh_pwauth: true
+users:
+  - name: packer
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    passwd: $6$z2wHHUK5Z8Nx6gZP$oDIkw1HPLHQD2PK53bLHEOW1A220OIgdun0fqVw3md.O7E7kht7MQtW54UHgITZnMJG8pQnhlfvwRT.I1F7mJ.    
+#passwd: packerpassword
+    lock_passwd: false
+apt:
+    preserve_sources_list: true
+package_update: false

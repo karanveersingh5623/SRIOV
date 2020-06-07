@@ -1,0 +1,90 @@
+
+
+# instance the provider
+provider "libvirt" {
+  uri = "qemu:///system"
+}
+
+variable "vm_names" {
+  description = "The names of the VMs to create"
+  type = list(string)
+  default = ["itp-dev-master01","itp-dev-worker01","itp-dev-worker02"]
+}
+
+resource "libvirt_volume" "itp-dev-vm" {
+ name = "${var.vm_names[count.index]}.qcow2"
+ count = length(var.vm_names)
+ pool = "guest_images"
+ source = "http://cloud-images.ubuntu.com/releases/bionic/release-20191008/ubuntu-18.04-server-cloudimg-amd64.img"
+ format = "qcow2"
+}
+
+# Create a network for our VMs
+resource "libvirt_network" "vm_network" {
+   name = "vm_network"
+   addresses = ["10.224.1.0/24"]
+   dhcp {
+        enabled = true
+   }
+}
+
+# Use CloudInit to users and their SSH public keys to the VM instance
+resource "libvirt_cloudinit_disk" "commoninit" {
+  name = "commoninit${count.index}.iso"
+  user_data = data.template_file.user_data[count.index].rendered
+  count = length(var.vm_names)
+}
+
+data "template_file" "user_data" {
+  template = "${file("${path.module}/cloud_init.cfg")}"
+
+  vars = {
+    HOSTNAME = var.vm_names[count.index]
+  }
+
+  count = length(var.vm_names)
+}
+
+# Virtual-Machine(s)
+resource "libvirt_domain" "itp-dev-vm" {
+  name   = var.vm_names[count.index]
+  memory = "1024"
+  vcpu   = 1
+  autostart = false
+
+  network_interface {
+    network_id = libvirt_network.vm_network.id
+    network_name = var.vm_network_name
+    hostname = var.vm_names[count.index]
+    wait_for_lease = true
+  }
+
+  cloudinit = libvirt_cloudinit_disk.commoninit[count.index].id
+
+  disk {
+    volume_id = element(libvirt_volume.itp-dev-vm.*.id,count.index)
+  }
+
+  # IMPORTANT
+  # Ubuntu can hang if a isa-serial is not present at boot time.
+  # If you find your CPU 100% and never is available this is why
+  console {
+    type = "pty"
+    target_type = "serial"
+    target_port = "0"
+  }
+
+  graphics {
+    type = "spice"
+    listen_type = "address"
+    autoport = true
+  }
+
+  count = length(var.vm_names)
+}
+
+# IPs: Use "wait_for_lease true" on "network_interface" or alternatively, after creation, use "terraform refresh", "terraform show" 
+#      or "virsh net-dhcp-leases vm_network" to display the IP addresses of the KVM domains
+output "IPs" {
+  value = libvirt_domain.itp-dev-vm.*.network_interface.0.addresses
+}

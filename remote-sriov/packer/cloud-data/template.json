@@ -1,0 +1,45 @@
+{
+    "builders": [
+        {
+            "type": "qemu",
+            "iso_url": "http://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-amd64.img",
+            "iso_checksum_url": "http://cloud-images.ubuntu.com/releases/bionic/release/SHA256SUMS",
+            "iso_checksum_type": "sha256",
+            "disk_image": true,
+            "disk_size": 5120,
+	    "headless": false,
+            "disk_interface": "virtio-scsi",
+            "disk_discard": "unmap",
+            "ssh_username": "packer",
+            "ssh_password": "packerpassword",
+            "http_directory": "cloud-data",
+            "qemuargs": [
+                ["-smbios", "type=1,serial=ds=nocloud-net;instance-id=packer;seedfrom=http://195.167.137.60:8000/"]
+            ],
+            "use_default_display": true
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": ["echo Your steps go here."]
+        },
+
+        {
+            "type": "shell",
+            "execute_command": "sudo sh -c '{{ .Vars }} {{ .Path }}'",
+            "remote_folder": "/tmp",
+            "inline": [
+                "apt update",
+		"apt install -y fio",
+                "mv /etc/netplan/50-cloud-init.yaml /root/",
+                "mv /etc/sudoers.d/90-cloud-init-users /root/",
+                "/usr/bin/truncate --size 0 /etc/machine-id",
+                "rm -r /var/lib/cloud /var/lib/dbus/machine-id",
+                "for i in group gshadow passwd shadow subuid subgid; do mv /etc/$i- /etc/$i; done",
+                "/bin/sync",
+                "/sbin/fstrim -v /"
+            ]
+        }
+    ]
+}

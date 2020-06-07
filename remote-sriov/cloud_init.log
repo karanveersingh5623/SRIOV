@@ -1,0 +1,21 @@
+users:
+  - name: test
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    home: /home/test
+    shell: /bin/bash
+    ssh-authorized-keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCgxXhQmjJSARWNc+d9C0pVYk/6rNbhkTB5JWdSC781GJgCsoGCIcyrmnffO8Y7HRIW4AViVRJaGfL0gi4l9c4n1UCcFt1YV2QNlkQZ9kY+3fmzlWryPHFgGhhTEwnJiMPCEGMja64J2d6wzu3i84HT0H7S96Q8BhLfkBAY2vNd/FCuIlc4/z+wve+fghWwp87r7a2Cw75FGnCtG0PD/MKdTnciD1a7cVX+Gm0lYnVZsk+YHpH9n8NmMwqska5wSFNRm6ThqkaSUacx6/cQjq6hYOoPcen3vJXaxv5GgjsgfSLbf6BZehuAobE9IzYxt8csPHxDRxXkokgGDpZvsrcQTk4Lu1uDkhAGmmaW1xQhAKg2kZN6T8Hbty7AO6+BWsVk0aBH9AZS6vkizsJzSYJMnhjNELQzJRD8XnO8h/6xKDM5JRZhaGQgVcZSWQlGxV2uut6NJ7tyBRtHkN2gc5UMrxbOUutQCB7TdxUXj5WQfufIAOJ/5RaNl7YMZQf92Dzgfhm3S5jsMP6FEJm4qdAkiKdmHB7tDVaaw0JGx+r5jPPezlQ6NgvQO7CcxhdjCKZG5vfdQDo4krNVbDfV+cSMTLdIAKeu2XYU8mjQKinnne4JFbAVc1K3VQ9fW3PKYwLIcDWzKD8Etvc9ZJkfU95PBw3aFXjYKh1x425dG8VEJQ== test #CHANGE_ME
+ssh_pwauth: True
+disable_root: false
+chpasswd:
+  list: |
+     test:linux
+  expire: False
+package_update: true
+packages:
+    - qemu-guest-agent
+growpart:
+  mode: auto
+  devices: ['/']
+
